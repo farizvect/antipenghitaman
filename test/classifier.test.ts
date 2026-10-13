@@ -6,7 +6,7 @@ test("mengklasifikasikan teks negatif dari skor Jev", async () => {
   const fetchImpl: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as Record<string, unknown>;
     assert.equal(request.model, "~typesafe/jev-latest");
-    assert.deepEqual(request.state, { text: "Produk ini buruk sekali" });
+    assert.deepEqual(request.state, "Produk ini buruk sekali");
 
     return new Response(
       JSON.stringify({

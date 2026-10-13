@@ -89,12 +89,12 @@ export async function classifyText(
     },
     body: JSON.stringify({
       model,
-      state: { text },
+      state: text,
       questions: {
         negative: {
           type: "noul",
           instructions:
-            "Apakah `text` merupakan teks negatif? Anggap negatif jika berisi sentimen negatif, keluhan, penghinaan, kebencian, pelecehan, ancaman, permusuhan, atau bahasa merendahkan. Kritik yang sopan tetap negatif bila menyatakan ketidakpuasan. Teks netral, informatif, pertanyaan tanpa sentimen, pujian, dukungan, dan candaan yang tidak menyerang bukan negatif. Nilai berdasarkan makna dan konteks, termasuk slang, sarkasme, serta bahasa Indonesia atau bahasa lain.",
+            "Apakah teks ini negatif? Anggap negatif jika berisi sentimen negatif, keluhan, penghinaan, kebencian, pelecehan, ancaman, permusuhan, atau bahasa merendahkan. Kritik yang sopan tetap negatif bila menyatakan ketidakpuasan. Teks netral, informatif, pertanyaan tanpa sentimen, pujian, dukungan, dan candaan yang tidak menyerang bukan negatif. Nilai berdasarkan makna dan konteks, termasuk slang, sarkasme, serta bahasa Indonesia atau bahasa lain.",
           criteria: {
             true: "Teks mengandung sikap, emosi, atau ujaran negatif.",
             false: "Teks netral atau positif dan tidak mengandung ujaran negatif.",

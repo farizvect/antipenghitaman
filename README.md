@@ -46,7 +46,7 @@ Body:
 
 - `text` (required): the comment to classify.
 - `threshold` (optional): 0–1, overrides `NEGATIVE_THRESHOLD`.
-- `model` (optional): any OpenRouter decision model id, e.g. `~typesafe/jev-latest` or `typesafe/jev-1.13`. Falls back to `DECISION_MODEL` (default `~typesafe/jev-latest`).
+- `model` (optional): any OpenRouter decision model id, e.g. `~typesafe/jev-latest`, `cloudflare/clef-flash`, or `microsoft/microsoft-decision-1`. Falls back to `DECISION_MODEL` (default `~typesafe/jev-latest`).
 
 Example response:
 
@@ -66,7 +66,7 @@ Example response:
 
 ### `GET /models`
 
-Lists the known decision models and the current default. Jev is the only decision-model family on OpenRouter right now, so the list is short, but the `/classify` `model` field still accepts any id.
+Lists the decision models the app knows about, plus the current default. There are ~22 decision models on OpenRouter across TypeSafe (Jev), Cloudflare (Clef), Microsoft, [OI] (GPT-6 Luna), Perplexity, Nace.AI, Liquid, Upstage, Inception, ScaleDown, Together, and a few community ones. The `/classify` `model` field still accepts any id, listed or not.
 
 ```bash
 curl http://localhost:3001/models
@@ -76,8 +76,10 @@ curl http://localhost:3001/models
 {
   "default": "~typesafe/jev-latest",
   "models": [
-    { "id": "~typesafe/jev-latest", "label": "Jev Latest", "note": "Always routes to the newest Jev release" },
-    { "id": "typesafe/jev-1.13", "label": "Jev 1.13", "note": "Pinned TypeSafe System One model" }
+    { "id": "~typesafe/jev-latest", "label": "TypeSafe · Jev Latest", "note": "Newest Jev release (alias)" },
+    { "id": "cloudflare/clef-flash", "label": "Cloudflare · Clef Flash", "note": "Fast 9B, low latency" },
+    { "id": "microsoft/microsoft-decision-1", "label": "Microsoft · Decision-1", "note": "Qwen3.5-9B post-train" },
+    { "id": "openai/gpt-6-luna-decisions", "label": "[OI] · GPT-6 Luna Decisions", "note": "Hosted Decisions API" }
   ]
 }
 ```
