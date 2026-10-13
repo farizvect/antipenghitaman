@@ -12,6 +12,73 @@ Short GIF of the moderation flow (paste a batch of comments → classify → neg
 
 Full-quality video: [`docs/demo.mp4`](docs/demo.mp4)
 
+## Which decision model should I use?
+
+There's no single winner, so here's the honest picture. Three things matter: **accuracy**, **price**, and **speed** — and the boards disagree on purpose (vendor-run vs independent).
+
+**Fastest path to a good default:** start with **Perplexity Decider V1.1 27B** (best independent accuracy, $0.02/M) or **Microsoft-Decision-1** (ties the leaders on accuracy, $0.042/M). Keep **Jev** if you want the most battle-tested option. Reach for **Clef Flash** when latency and price dominate.
+
+### Independent accuracy + latency + price
+
+Numbers from [AkitaOnRails' independent test](https://akitaonrails.com/en/2026/10/10/which-jev-like-ai-decision-classifier-model-is-best/) — 168 compact cases, half English half Portuguese, run against each vendor's own API (or locally for the open ones). Treat them as a snapshot, not gospel.
+
+| Model (OpenRouter id) | Maker | $/1M in | Indep. accuracy | Median latency | 10k decisions |
+|---|---|---|---|---|---|
+| `perplexity/pplx-decider-v1.1-27b` | Perplexity | $0.02 | **99.4%** | 1,547 ms\* | — |
+| `~typesafe/jev-latest` | TypeSafe | $0.042 | 97.6% | 255 ms | $0.19 |
+| `microsoft/microsoft-decision-1` | Microsoft | $0.042 | 97.6% | 422 ms | **$0.065** |
+| `cloudflare/clef` | Cloudflare | $0.042 | 95.8% | 302 ms | $0.63 |
+| `openai/gpt-6-luna-decisions` | [OI] | $0.10 | 90.5% | 222 ms | $0.23 |
+| `cloudflare/clef-flash` | Cloudflare | $0.021 | 87.5% | 394 ms | $0.10 |
+| `jaredpalmer/kev-4b` | Jared Palmer | $0.042 | 87.5% | 246 ms | — |
+
+\* measured on a local LAN box, not an API, so not comparable to the rest.
+
+### Independent quality board (Decision Index 0.3.2)
+
+[The Decision Index](https://huggingface.co/spaces/multimodalart/jev-decision-index) scores 160 models on the same 110,201 requests, then puts 80% of the weight on private tests nobody can train on. Higher is better. Only the models this app lists are shown.
+
+| Model (OpenRouter id) | Full score |
+|---|---|
+| `perplexity/pplx-decider-v1.1-27b` | 62.8 |
+| `~typesafe/jev-latest` | 60.1 |
+| `nace-ai/drex-v2.0` | 55.9 |
+| `cloudflare/clef` | 53.1 |
+| `nace-ai/drex-v1.5` | 49.7 |
+| `cloudflare/clef-omni` | 48.3 |
+| `cloudflare/clef-flash` | 47.5 |
+| `jaredpalmer/kev-4b` | 39.5 |
+| `liquid/d1` | 38.9 |
+| `togethercomputer/tev1-4b-experimental` | 34.1 |
+
+Microsoft-Decision-1, GPT-6 Luna, Upstage Solar Decide, Inception Mercury, ScaleDown Classify-1 and Respan Span-01 aren't on this board yet — no independent number exists for them.
+
+### What people actually run
+
+Live request volume on OpenRouter ([source](https://openrouter.ai/rankings/decisions), week of Oct 12 2026). Popularity isn't accuracy, but it's a good proxy for "battle-tested."
+
+| Rank | Model | Weekly requests |
+|---|---|---|
+| 1 | Jev 1.13 | 1.07B |
+| 2 | Perplexity Decider V1.1 27B | 21.7M |
+| 3 | GPT-6 Luna Decisions | 19.9M |
+| 4 | Drex v1.5 | 12.4M |
+| 5 | Clef Flash | 11.2M |
+| 6 | Mercury Decide (free) | 10.9M |
+| 7 | Microsoft-Decision-1 | 10.7M |
+
+### Quick picks
+
+- **Best overall (independent boards):** `perplexity/pplx-decider-v1.1-27b` — top accuracy and top Decision Index, cheap at $0.02/M.
+- **Cheapest hosted that keeps up:** `microsoft/microsoft-decision-1` — ties the leaders on accuracy for a third of Jev's cost per decision.
+- **Safest default:** `~typesafe/jev-latest` — ~1.07B requests/week and the fastest of the hosted leaders.
+- **Fast and cheap:** `cloudflare/clef-flash` at $0.021/M.
+- **Free to try:** `inception/mercury-decide:free` and `respan/span-01-lite:free`.
+- **Multimodal state (image/audio/video):** `cloudflare/clef-omni`.
+- **Long documents:** `upstage/solar-decide-flash` (512K context).
+
+Caveats: some numbers are vendor-run (Microsoft, Perplexity) and can't be compared head to head; the independent boards are small and synthetic. Measure with **your own** comments before you commit — that's what the `model` field is for.
+
 ## Running it
 
 Needs Node.js 22.18 or newer.
