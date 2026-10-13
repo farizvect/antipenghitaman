@@ -2,6 +2,12 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { classifyText, ConfigurationError, OpenRouterError } from "./classifier.js";
+import {
+  DECISION_MODELS,
+  DEFAULT_DECISION_MODEL,
+  InvalidModelError,
+  resolveDecisionModel,
+} from "./decision-models.js";
 import { connectSource, isPlatform, type SourceHandle } from "./sources/index.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
@@ -82,6 +88,11 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/models") {
+    sendJson(response, 200, { default: DEFAULT_DECISION_MODEL, models: DECISION_MODELS });
+    return;
+  }
+
   if (request.method === "GET" && url.pathname === "/live/stream") {
     const platform = url.searchParams.get("platform") ?? "";
     const channel = url.searchParams.get("channel") ?? "";
@@ -108,6 +119,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
 
   const text = (body as JsonObject).text as string;
   const rawThreshold = (body as JsonObject).threshold;
+  const model = resolveDecisionModel((body as JsonObject).model);
   if (text.trim().length === 0) {
     throw new ClientError('Field "text" cannot be empty', 400);
   }
@@ -121,11 +133,12 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     throw new ClientError('Field "threshold" must be a number between 0 and 1', 400);
   }
 
-  const classification = rawThreshold === undefined
-    ? await classifyText(text)
-    : await classifyText(text, { threshold: rawThreshold as number });
+  const classification = await classifyText(text, {
+    model,
+    ...(rawThreshold === undefined ? {} : { threshold: rawThreshold as number }),
+  });
   const { negative, score, confidence } = classification;
-  sendJson(response, 200, { negative, score, confidence });
+  sendJson(response, 200, { negative, score, confidence, model: classification.model });
 }
 
 async function handleLiveStream(
@@ -182,6 +195,10 @@ export function createApp() {
     handleRequest(request, response).catch((error: unknown) => {
       if (error instanceof ClientError) {
         sendJson(response, error.status, { error: error.message });
+        return;
+      }
+      if (error instanceof InvalidModelError) {
+        sendJson(response, 400, { error: error.message });
         return;
       }
       if (error instanceof ConfigurationError) {

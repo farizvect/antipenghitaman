@@ -1,8 +1,8 @@
 # Negative comment classification API
 
-A small HTTP API that decides whether a comment or a piece of text is negative. The client doesn't send an API key; the server holds `OPENROUTER_API_KEY` and calls the OpenRouter Decisions API with the `~typesafe/jev-latest` model.
+A small HTTP API that decides whether a comment or a piece of text is negative. The client doesn't send an API key; the server holds `OPENROUTER_API_KEY` and calls the OpenRouter Decisions API with a decision model (Jev by default — switch it in the UI or per request).
 
-There's a simulation UI at `http://localhost:3001`. The feed pulls comments from YouTube, TikTok, Twitch, and Kick, and each comment shows a logo for the platform it came from. Send a comment to watch it get classified. Negative ones get flagged and destroyed with an animation. The demo ships 100 comments across a dozen languages. **Paste bulk** takes up to 20 comments at once, one per line. **Speed** sets the parallelism for the demo and bulk runs (1×, 2×, 3×; 3× by default), and the **Negative threshold** slider controls how sensitive the classifier is.
+There's a simulation UI at `http://localhost:3001`. The feed pulls comments from YouTube, TikTok, Twitch, and Kick, and each comment shows a logo for the platform it came from. Send a comment to watch it get classified. Negative ones get flagged and destroyed with an animation. The demo ships 100 comments across a dozen languages. **Paste bulk** takes up to 20 comments at once, one per line. **Speed** sets the parallelism for the demo and bulk runs (1×, 2×, 3×; 3× by default). The **Negative threshold** slider controls how sensitive the classifier is, and the **Decision model** field picks which model answers (type any id, or choose from the list).
 
 ## Demo
 
@@ -42,21 +42,45 @@ curl http://localhost:3001/classify \
   -d '{"text":"Pelayanannya buruk dan sangat mengecewakan"}'
 ```
 
+Body:
+
+- `text` (required): the comment to classify.
+- `threshold` (optional): 0–1, overrides `NEGATIVE_THRESHOLD`.
+- `model` (optional): any OpenRouter decision model id, e.g. `~typesafe/jev-latest` or `typesafe/jev-1.13`. Falls back to `DECISION_MODEL` (default `~typesafe/jev-latest`).
+
 Example response:
 
 ```json
 {
   "negative": true,
-  "score": 0.94,
-  "confidence": 0.94,
-  "model": "typesafe/jev-1.13-20260917",
-  "cost_usd": 0.00002
+  "score": 0.99,
+  "confidence": 0.99,
+  "model": "typesafe/jev-1.13-20260917"
 }
 ```
 
 - `score`: how likely the text is negative, from 0 to 1.
 - `negative`: `true` when `score >= NEGATIVE_THRESHOLD` (default `0.5`).
 - `confidence`: how sure the model is about the boolean it picked.
+- `model`: the concrete model that answered (an alias resolves to its pinned release).
+
+### `GET /models`
+
+Lists the known decision models and the current default. Jev is the only decision-model family on OpenRouter right now, so the list is short, but the `/classify` `model` field still accepts any id.
+
+```bash
+curl http://localhost:3001/models
+```
+
+```json
+{
+  "default": "~typesafe/jev-latest",
+  "models": [
+    { "id": "~typesafe/jev-latest", "label": "Jev Latest", "note": "Always routes to the newest Jev release" },
+    { "id": "typesafe/jev-1.13", "label": "Jev 1.13", "note": "Pinned TypeSafe System One model" }
+  ]
+}
+```
 
 ### `GET /health`
 

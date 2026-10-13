@@ -1,5 +1,6 @@
+import { DEFAULT_DECISION_MODEL } from "./decision-models.js";
+
 const OPENROUTER_DECISIONS_URL = "https://openrouter.ai/api/alpha/decisions";
-const DEFAULT_MODEL = "~typesafe/jev-latest";
 const DEFAULT_THRESHOLD = 0.5;
 const DEFAULT_TIMEOUT_MS = 15_000;
 
@@ -66,7 +67,7 @@ export async function classifyText(
     throw new ConfigurationError("OPENROUTER_API_KEY belum dikonfigurasi");
   }
 
-  const model = options.model ?? DEFAULT_MODEL;
+  const model = options.model ?? DEFAULT_DECISION_MODEL;
   const threshold = numberInRange(
     options.threshold ?? Number(process.env.NEGATIVE_THRESHOLD),
     DEFAULT_THRESHOLD,

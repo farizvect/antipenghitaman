@@ -127,9 +127,17 @@
               <div class="metric metric-destroyed"><span>REMOVED</span><strong id="blocked-count">0</strong><small>negative</small></div>
             </div>
 
+            <div class="model-card">
+              <div class="section-label">DECISION MODEL / 02</div>
+              <div class="model-heading"><label for="model-input">Model</label><strong id="model-status">DEFAULT</strong></div>
+              <input id="model-input" class="model-input" list="model-options" autocomplete="off" spellcheck="false" placeholder="~typesafe/jev-latest" />
+              <datalist id="model-options"></datalist>
+              <p>Any OpenRouter decision model. Pick a known one or type your own.</p>
+            </div>
+
             <div class="control-card">
               <div class="control-card-head">
-                <div><span class="section-label">SIMULATION / 02</span><h2>Test the filter</h2></div>
+                <div><span class="section-label">SIMULATION / 03</span><h2>Test the filter</h2></div>
                 <span class="test-icon" aria-hidden="true">↗</span>
               </div>
               <p class="control-intro">Send 100 multilingual comments through the feed, or paste your own batch.</p>
@@ -146,7 +154,7 @@
             </div>
 
             <div class="threshold-card">
-              <div class="section-label">SENSITIVITY / 03</div>
+              <div class="section-label">SENSITIVITY / 04</div>
               <div class="threshold-heading"><label for="threshold-input">Negative threshold</label><strong id="threshold-value">50%</strong></div>
               <input id="threshold-input" class="threshold-slider" type="range" min="0.30" max="0.95" step="0.05" value="0.50" aria-describedby="threshold-help" />
               <div class="slider-labels"><span>STRICTER</span><span>MORE LENIENT</span></div>
@@ -154,7 +162,7 @@
             </div>
 
             <form id="bulk-panel" class="bulk-panel" hidden>
-              <div class="bulk-copy"><div><span class="section-label">BULK TEST / 04</span><strong>Your comments</strong><span>One comment per line.</span></div><span class="bulk-limit">MAX 20</span></div>
+              <div class="bulk-copy"><div><span class="section-label">BULK TEST / 05</span><strong>Your comments</strong><span>One comment per line.</span></div><span class="bulk-limit">MAX 20</span></div>
               <label class="sr-only" for="bulk-input">Comment list, one comment per line</label>
               <textarea id="bulk-input" rows="6" placeholder="This was really helpful!&#10;This content is terrible.&#10;When is the next part coming?"></textarea>
               <div class="bulk-footer"><span id="bulk-count">0 comments ready</span><div><button id="bulk-cancel" class="text-button" type="button">Cancel</button><button id="bulk-submit" class="primary-button" type="submit" disabled>Test comments</button></div></div>

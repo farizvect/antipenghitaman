@@ -21,6 +21,9 @@ const progressLabel = document.querySelector("#progress-label");
 const feedStatusLabel = document.querySelector("#feed-status-label");
 const feedStatus = feedStatusLabel.closest(".feed-status");
 const speedSelection = document.querySelector("#speed-selection");
+const modelInput = document.querySelector("#model-input");
+const modelStatus = document.querySelector("#model-status");
+const modelOptions = document.querySelector("#model-options");
 
 const platformNames = {
   youtube: "YouTube",
@@ -155,6 +158,7 @@ let platformIndex = 2;
 let scrollFrame;
 let metricsFrame;
 let activeBatchController;
+let defaultModel = "";
 
 speedButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -171,6 +175,9 @@ speedButtons.forEach((button) => {
 
 thresholdInput.addEventListener("input", updateThreshold);
 updateThreshold();
+
+modelInput.addEventListener("input", updateModelStatus);
+loadModels();
 
 input.addEventListener("input", () => {
   input.style.height = "auto";
@@ -259,7 +266,7 @@ async function submitComment(text, { focusAfter = true, speedFactor = 1, author 
     const response = await fetch("/classify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, threshold: Number(thresholdInput.value) }),
+      body: JSON.stringify({ text, threshold: Number(thresholdInput.value), model: modelInput.value.trim() }),
       signal,
     });
     const result = await response.json();
@@ -327,6 +334,7 @@ function setBatchBusy(busy) {
   stopButton.innerHTML = '<span aria-hidden="true"></span>Stop';
   speedButtons.forEach((button) => { button.disabled = busy; });
   thresholdInput.disabled = busy;
+  modelInput.disabled = busy;
   feedStatus.classList.toggle("running", busy);
   feedStatusLabel.textContent = busy ? "PROCESSING" : "MONITORING";
 }
@@ -343,6 +351,30 @@ function updateThreshold() {
   const position = ((value - min) / (max - min)) * 100;
   thresholdValue.textContent = `${Math.round(value * 100)}%`;
   thresholdInput.style.setProperty("--threshold-position", `${position}%`);
+}
+
+async function loadModels() {
+  try {
+    const response = await fetch("/models");
+    const data = await response.json();
+    defaultModel = typeof data.default === "string" ? data.default : "";
+    modelOptions.innerHTML = "";
+    for (const model of data.models ?? []) {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.label = model.note ? `${model.label} — ${model.note}` : model.label;
+      modelOptions.append(option);
+    }
+  } catch {
+    /* offline: fall back to whatever the field already holds */
+  }
+  if (!modelInput.value.trim()) modelInput.value = defaultModel || "~typesafe/jev-latest";
+  updateModelStatus();
+}
+
+function updateModelStatus() {
+  const current = modelInput.value.trim();
+  modelStatus.textContent = current && current === defaultModel ? "DEFAULT" : "CUSTOM";
 }
 
 function buildDemoComments(total) {
