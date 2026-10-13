@@ -6,10 +6,11 @@ Website simulasi tersedia di `http://localhost:3001`. Feed menggabungkan komenta
 
 ## Demo
 
-Rekaman singkat alur moderasi (paste batch komentar → klasifikasi → komentar negatif dihancurkan): [`docs/demo.mp4`](docs/demo.mp4)
+Animasi singkat alur moderasi (paste batch komentar → klasifikasi → komentar negatif dihancurkan):
 
-https://github.com/farizvect/antipenghitaman/raw/main/docs/demo.mp4
+<img src="docs/demo.gif" width="100%" alt="Demo moderasi komentar">
 
+Video kualitas penuh: [`docs/demo.mp4`](docs/demo.mp4)
 
 ## Menjalankan
 
