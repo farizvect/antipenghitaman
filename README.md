@@ -61,6 +61,54 @@ Contoh respons:
 
 Mengembalikan `{ "ok": true }` tanpa memanggil OpenRouter.
 
+## Integrasi live comment
+
+Ambil komentar langsung dari live chat platform. Read-only, tanpa API key.
+
+### `GET /live/stream` (SSE)
+
+```bash
+curl -N 'http://localhost:3001/live/stream?platform=twitch&channel=nix'
+```
+
+- `platform`: `twitch` | `kick` | `youtube` | `tiktok`
+- `channel`: username / slug / handle platform
+- `video` (opsional, YouTube): id video live, untuk melewati lookup channel
+
+Event yang dikirim:
+
+```
+event: status
+data: {"state":"connecting","platform":"twitch","channel":"nix"}
+
+event: status
+data: {"state":"open"}
+
+event: comment
+data: {"platform":"twitch","channel":"nix","id":"…","author":"ggadki","text":"!турнир","at":"2026-10-13T15:13:20.902Z"}
+
+event: error
+data: {"message":"…"}
+```
+
+Uji adapter langsung dari terminal (tanpa server):
+
+```bash
+npm run live -- twitch nix
+npm run live -- kick tjr
+npm run live -- youtube LofiGirl 1-LpQekNa9g
+npm run live -- tiktok <username-yang-sedang-live>
+```
+
+Catatan per platform (semua read-only, tanpa key):
+
+- **Twitch** — `tmi.js` (IRC). Paling stabil.
+- **Kick** — realtime Centrifugo Kick (`web.kick.com/api/v1/realtime` + websocket). Unofficial, bisa berubah sewaktu-waktu.
+- **YouTube** — `youtubei.js` (innertube). Butuh stream yang sedang live dengan chat aktif; paling rapuh.
+- **TikTok** — `tiktok-live-connector`. Butuh akun yang sedang LIVE (dan signature TikTok).
+
+Arsitektur: `src/sources/` berisi satu adapter per platform, `src/sources/index.ts` sebagai registry, dipakai oleh endpoint SSE di `src/server.ts` dan CLI `src/sources/cli.ts`.
+
 ## Keamanan
 
 `.env` sudah diabaikan Git. Jangan memasukkan key OpenRouter ke source code atau mengirimkannya dari client. Endpoint sengaja tidak memakai autentikasi sesuai kebutuhan ini; sebelum dipublikasikan ke internet, tambahkan rate limit atau autentikasi agar kredit OpenRouter tidak disalahgunakan.

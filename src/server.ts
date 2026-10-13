@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { classifyText, ConfigurationError, OpenRouterError } from "./classifier.js";
+import { connectSource, isPlatform, type SourceHandle } from "./sources/index.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_TEXT_LENGTH = 10_000;
@@ -81,6 +82,20 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     return;
   }
 
+  if (request.method === "GET" && url.pathname === "/live/stream") {
+    const platform = url.searchParams.get("platform") ?? "";
+    const channel = url.searchParams.get("channel") ?? "";
+    const video = url.searchParams.get("video") ?? undefined;
+    if (!isPlatform(platform) || channel.trim().length === 0) {
+      sendJson(response, 400, {
+        error: 'Query params "platform" (twitch|kick|youtube|tiktok) and "channel" are required',
+      });
+      return;
+    }
+    await handleLiveStream(request, response, platform, channel, video);
+    return;
+  }
+
   if (request.method !== "POST" || url.pathname !== "/classify") {
     sendJson(response, 404, { error: "Endpoint not found" });
     return;
@@ -111,6 +126,55 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     : await classifyText(text, { threshold: rawThreshold as number });
   const { negative, score, confidence } = classification;
   sendJson(response, 200, { negative, score, confidence });
+}
+
+async function handleLiveStream(
+  request: IncomingMessage,
+  response: ServerResponse,
+  platform: string,
+  channel: string,
+  video: string | undefined,
+): Promise<void> {
+  response.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+
+  const send = (event: string, data: unknown): void => {
+    response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  send("status", { state: "connecting", platform, channel });
+
+  let handle: SourceHandle;
+  try {
+    handle = await connectSource(platform, {
+      channel,
+      ...(video ? { video } : {}),
+      onComment: (comment) => send("comment", comment),
+      onStatus: (state, detail) =>
+        send("status", detail === undefined ? { state } : { state, detail }),
+      onError: (error) => send("error", { message: error.message }),
+    });
+  } catch (error) {
+    send("error", { message: error instanceof Error ? error.message : String(error) });
+    response.end();
+    return;
+  }
+
+  send("status", { state: "open" });
+  const keepAlive = setInterval(() => response.write(": keep-alive\n\n"), 15_000);
+  let closed = false;
+  const cleanup = (): void => {
+    if (closed) return;
+    closed = true;
+    clearInterval(keepAlive);
+    Promise.resolve(handle.close()).catch(() => undefined);
+  };
+  request.on("close", cleanup);
+  response.on("close", cleanup);
 }
 
 export function createApp() {

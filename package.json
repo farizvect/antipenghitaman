@@ -7,6 +7,7 @@
     "dev": "node --env-file-if-exists=.env --watch --import tsx src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node --env-file-if-exists=.env dist/server.js",
+    "live": "node --env-file-if-exists=.env --import tsx src/sources/cli.ts",
     "test": "node --import tsx --test"
   },
   "engines": {
@@ -14,7 +15,13 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/tmi.js": "^1.8.6",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "tiktok-live-connector": "^2.5.0",
+    "tmi.js": "^1.8.5",
+    "youtubei.js": "^18.1.0"
   }
 }
